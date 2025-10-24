@@ -13,35 +13,6 @@ on:
       - 'docs/**/*'
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-
-      - run: find ./scripts/unix/ -type f -exec chmod +x {} \;
-
-      # Install Turborepo
-      - run: npm i
-
-      - name: Copy root README to frontend-framework package
-        run: cp README.md packages/frontend-framework/README.md
-
-      - run: npm run build
-
-      - run: npm run test
-
-      - name: Build all packages and release them
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm run release
-
   deploy-docs:
     needs: release
     runs-on: ubuntu-latest
