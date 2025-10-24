@@ -47,6 +47,12 @@ jobs:
           rm -rf source
           git worktree add --force source origin/develop
 
+      - name: Compat symlink for scripts expecting ./main
+        run: |
+          rm -rf main
+          ln -s source main
+          ls -la
+
       - name: Make scripts executable
         run: |
           if [ -d ./source/scripts/unix ]; then
