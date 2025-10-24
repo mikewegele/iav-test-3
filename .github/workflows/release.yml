@@ -35,8 +35,8 @@ jobs:
 
       - name: Prepare gh-pages
         run: |
-          git fetch test
-          if ! git rev-parse --verify test/gh-pages; then
+          git fetch origin
+          if ! git rev-parse --verify origin/gh-pages; then
             git checkout --orphan gh-pages
             git rm -rf .
             echo "Created new gh-pages branch."
