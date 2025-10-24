@@ -62,4 +62,4 @@ rm -rf main
 
 git add .
 git commit -m "chore: Deploy updated documentation"
-git push origin gh-pages
+git push test gh-pages
