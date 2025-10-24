@@ -1,4 +1,4 @@
-name: Release
+name: Deploy Docs
 
 on:
   workflow_dispatch:
@@ -12,11 +12,14 @@ on:
       - '.github/**/*'
       - 'docs/**/*'
 
+permissions:
+  contents: write
+
 jobs:
   deploy-docs:
-    needs: release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -41,10 +44,16 @@ jobs:
           else
             git checkout gh-pages
           fi
-          mkdir main
+          mkdir -p main
           git archive --format=tar main | tar -x -C main
 
-      - run: find ./main/scripts/unix/ -type f -exec chmod +x {} \;
+      - name: Make scripts executable
+        run: find ./main/scripts/unix/ -type f -exec chmod +x {} \;
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
 
       - name: Generate docs
         run: |
