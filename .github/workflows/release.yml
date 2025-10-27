@@ -1,74 +1,33 @@
-name: Deploy Docs
+name: Deploy docs to GitHub Pages
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
-      - develop
-    paths-ignore:
-      - 'SBOM.json'
-      - '*.md'
-      - '.github/**/*'
-      - 'docs/**/*'
+    branches: [develop]
 
 permissions:
   contents: write
 
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
 jobs:
-  deploy-docs:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-
-      - name: Set environment variables
-        run: echo "GITHUB_ACTOR=${{ github.actor }}" >> $GITHUB_ENV
-
-      - name: Set GitHub identity
+          node-version: '20'
+      - name: Install & build
+        working-directory: docs
         run: |
-          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git config --global user.name "${GITHUB_ACTOR}"
-
-      - name: Prepare gh-pages
-        run: |
-          git fetch origin
-          if git ls-remote --exit-code --heads origin gh-pages > /dev/null; then
-            git checkout gh-pages
-          else
-            git checkout --orphan gh-pages
-            git rm -rf .
-            echo "Created new gh-pages branch."
-          fi
-          git worktree prune
-          rm -rf source
-          git worktree add --force source origin/develop
-
-      - name: Compat symlink for scripts expecting ./main
-        run: |
-          rm -rf main
-          ln -s source main
-          ls -la
-
-      - name: Make scripts executable
-        run: |
-          if [ -d ./source/scripts/unix ]; then
-            find ./source/scripts/unix/ -type f -exec chmod +x {} \;
-          fi
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          npm ci
+          npm run build
+      - name: Deploy to github-pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          node-version: 'lts/*'
-
-      - name: Generate docs
-        run: |
-          ./source/scripts/unix/docs_generation/copy-additional-files.sh
-          cd source
-          npm i
-          npm run generate-docs
-          cd ..
-          ./source/scripts/unix/docs_generation/process-and-commit-docs.sh
+          branch: github-pages
+          folder: docs/dist
+          clean: true
+          single-commit: true
